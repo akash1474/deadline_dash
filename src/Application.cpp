@@ -11,6 +11,7 @@
 
 #include "Utils.h"
 #include <filesystem>
+#include <shellapi.h>
 
 Application::~Application(){};
 
@@ -142,6 +143,40 @@ void Application::HandleFontFile(std::string& aConfigFontPath){
 
 }
 
+void CenteredText(const char* label)
+{
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
+    ImGui::SetCursorPos({(window->Size.x-label_size.x)*0.5f,ImGui::GetCursorPos().y-(ImGui::GetStyle().FramePadding.y*1.5f)});
+    ImGui::Text("%s", label);
+}
+
+int CenterWrapped(const char* text,float max_width)
+{
+    float textSize = ImGui::CalcTextSize(text).x;
+    float char_width = ImGui::CalcTextSize("A").x;
+    int max_len=ImGui::GetWindowWidth()>max_width ? int(max_width/char_width) : int(ImGui::GetWindowWidth()/char_width); 
+    int nLines=0;
+
+    if (textSize > max_width) {
+        std::string s(text);
+        float allowedWidth=char_width*max_len;
+        while(textSize>allowedWidth){
+            size_t x = s.substr(0, max_len).find_last_of(' ');
+            if(x==std::string::npos) x=max_len-1;
+            nLines++;
+            CenteredText(s.substr(0, x).c_str());
+            s = s.substr(x + 1, s.size() - 1);
+            textSize = ImGui::CalcTextSize(s.c_str()).x;
+        }
+        CenteredText(s.c_str());
+    } else {
+        CenteredText(text);
+    }
+    return nLines;
+}
+
+
 void Application::RenderSettings()
 {
     static char buff[512]="";
@@ -214,45 +249,27 @@ void Application::RenderSettings()
         }
 
         if (ImGui::CollapsingHeader("About")){
-            ImGui::Text("Deadline Dash");
+            CenteredText("Deadline Dash");
+            CenteredText("v1.0.0");
+            CenteredText("Developed by: Akash Pandit");
+            ImGui::Separator();
+            ImGui::Spacing();
+            CenterWrapped("Deadline Dash is a countdown timer application built using GLFW, OpenGL, and ImGui.It helps you track deadlines and stay motivated by providing a customizable and intuitive user interface.",500.0f);
+            ImGui::Spacing();
+            ImGui::Text("Credits:");
+            ImGui::BulletText("GLFW - Window and input handling");
+            ImGui::BulletText("OpenGL - Rendering graphics");
+            ImGui::BulletText("Dear ImGui - User interface library");
+            ImGui::Spacing();
+            if (ImGui::Button("GitHub Repository")) {
+                ShellExecuteA(NULL, "open", "https://github.com/akash1474/deadline_dash", NULL, NULL, SW_SHOWNORMAL);
+            }
         }
     ImGui::End();
 
 }
 
 
-void CenteredText(const char* label)
-{
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
-    const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
-    ImGui::SetCursorPos({(window->Size.x-label_size.x)*0.5f,ImGui::GetCursorPos().y-(ImGui::GetStyle().FramePadding.y*1.5f)});
-    ImGui::Text("%s", label);
-}
-
-int CenterWrapped(const char* text,float max_width)
-{
-    float textSize = ImGui::CalcTextSize(text).x;
-    float char_width = ImGui::CalcTextSize("A").x;
-    int max_len=ImGui::GetWindowWidth()>max_width ? int(max_width/char_width) : int(ImGui::GetWindowWidth()/char_width); 
-    int nLines=0;
-
-    if (textSize > max_width) {
-        std::string s(text);
-        float allowedWidth=char_width*max_len;
-        while(textSize>allowedWidth){
-            size_t x = s.substr(0, max_len).find_last_of(' ');
-            if(x==std::string::npos) x=max_len-1;
-            nLines++;
-            CenteredText(s.substr(0, x).c_str());
-            s = s.substr(x + 1, s.size() - 1);
-            textSize = ImGui::CalcTextSize(s.c_str()).x;
-        }
-        CenteredText(s.c_str());
-    } else {
-        CenteredText(text);
-    }
-    return nLines;
-}
 
 
 void Application::SwitchDisplayModeIfNeeded(int width,int height){
