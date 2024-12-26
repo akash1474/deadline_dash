@@ -1,5 +1,11 @@
 # Deadline Dash
+<p align="center">
+  <img src="./assets/DeadLineDash.png" alt="app logo" width="300">
+</p>
 
+<p align="center">
+  Deadline Dash
+</p>
 Deadline Dash is a sleek and customizable countdown timer application built with GLFW, OpenGL, and ImGui. It helps you track deadlines effectively by displaying a countdown in an intuitive and user-friendly interface. Whether you need to focus or keep track of your goals, Deadline Dash is here to make sure you never miss a deadline!
 
 ## Features
