@@ -1,5 +1,19 @@
 #pragma once
 #include "imgui.h"
+#include <shobjidl.h>
+#include "string"
+#include "userenv.h"
+#include "filesystem"
+#include "Log.h"
+
+inline std::string ToUTF8(std::wstring wString){
+    if(wString.empty()) return "";
+
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wString.c_str(), (int)wString.size(), nullptr, 0, nullptr, nullptr);
+    std::string utf8String(size_needed,0);
+    WideCharToMultiByte(CP_UTF8, 0, wString.c_str(), (int)wString.size(), &utf8String[0], size_needed, nullptr, nullptr); 
+    return utf8String;
+}
 
 inline void ApplyDraculaColorScheme(){
 
@@ -76,4 +90,71 @@ inline void ApplyDraculaColorScheme(){
 	style.ChildRounding = 4;
 
 
+}
+
+
+
+
+inline std::string SelectFile(){
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    std::wstring filePath;
+
+    IFileDialog *pfd;
+    if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_PPV_ARGS(&pfd)))) {
+        // Set the file dialog options
+        DWORD dwOptions;
+        if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
+            pfd->SetOptions(dwOptions | FOS_ALLOWMULTISELECT);
+
+            // Show the file dialog
+            if (SUCCEEDED(pfd->Show(NULL))) {
+                IShellItem *psi;
+                if (SUCCEEDED(pfd->GetResult(&psi))) {
+                    PWSTR pszPath;
+                    if (SUCCEEDED(psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath))) {
+
+                        filePath=pszPath;
+                        CoTaskMemFree(pszPath);
+                    }
+                    psi->Release();
+                }
+            }
+        }
+        pfd->Release();
+    }
+
+    CoUninitialize();
+    return ToUTF8(filePath);
+}
+
+
+inline void ShowErrorMessage(const char* errorMessage) {
+    MessageBoxA(nullptr, errorMessage, "Error", MB_ICONERROR | MB_OK);
+}
+
+inline void ShowMessage(const char* title,const char* msg) {
+    MessageBoxA(nullptr, msg, title, MB_OK | MB_ICONINFORMATION);
+}
+
+inline std::string GetUserDirectory(const char* app_folder=nullptr){
+    char profileDir[MAX_PATH];
+    DWORD size = sizeof(profileDir);
+
+    // Get the user's profile directory
+    if (!GetUserProfileDirectoryA(GetCurrentProcessToken(), profileDir, &size)) {
+        DWORD error = GetLastError();
+
+        char errorMessage[256];
+        sprintf_s(errorMessage, sizeof(errorMessage), "Error getting user profile directory. Error code: %lu\n Try running as administrator.", error);
+        ShowErrorMessage(errorMessage);
+    }
+    if(app_folder){
+        std::string path(profileDir);
+        path+="\\"+std::string(app_folder);
+        if(!std::filesystem::exists(path)) std::filesystem::create_directory(path);
+        GL_INFO("ROOT PATH:{}",path);
+        return std::string(path);
+    }
+    GL_INFO("ROOT PATH:{}",profileDir);
+    return std::string(profileDir);
 }

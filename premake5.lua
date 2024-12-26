@@ -29,7 +29,7 @@ project "deadlinedash"
    pchsource "src/pch.cpp"
 
    links {
-      "glfw","ImGui","opengl32","dwmapi","Shlwapi","winmm"
+      "glfw","ImGui","opengl32","dwmapi","Shlwapi","winmm","userenv","Shell32"
    }
 
    includedirs{
@@ -75,3 +75,5 @@ project "deadlinedash"
       staticruntime "On"
       buildoptions { "/MP","/utf-8"}
       linkoptions {"/ENTRY:mainCRTStartup"}
+      files { 'setup.rc', '**.ico' }
+      vpaths { ['./*'] = { '*.rc', '**.ico' }}

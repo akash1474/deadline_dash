@@ -1,24 +1,28 @@
 #include "GLFW/glfw3.h"
+#include "Log.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "pch.h"
+#include <chrono>
 #include <ctime>
+#include <filesystem>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_img.h"
 #include <dwmapi.h>
 #include <windef.h>
 #include <wingdi.h>
-#include "recursive_linear_medium.h"
-#include "fa-solid-900.h"
-#include "ProtestStrike.embed"
+#include "./resources/AppIcon.embed"
 #include "Utils.h"
 #include "Application.h"
+#include <dwrite.h>
+#include <wrl.h>
 
 #define IMGUI_DATEPICKER_YEAR_MIN 1970
 #define IMGUI_DATEPICKER_YEAR_MAX 3000
 
 int width{400};
 int height{200};
+int targetFPS = 60;
 
 void draw(GLFWwindow* window)
 {
@@ -55,6 +59,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     draw(window);
 }
 
+void WindowFocusCallback(GLFWwindow* window, int focused) {
+    if (focused) targetFPS = 60;
+    else targetFPS = 8; 
+}
 
 
 int main(void){
@@ -72,7 +80,7 @@ int main(void){
 #endif
 
     window = glfwCreateWindow(width, height, "Deadline Dash", NULL, NULL);
-    // glfwSetWindowSizeLimits(window, 330, 500, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    glfwSetWindowSizeLimits(window, 280, 150, GLFW_DONT_CARE, GLFW_DONT_CARE);
     // glfwSetWindowOpacity(GLFWwindow *window, float opacity)
     if (!window) {
         glfwTerminate();
@@ -106,20 +114,8 @@ int main(void){
     io.IniFilename=nullptr;
     io.LogFilename=nullptr;
 
-    static const ImWchar icons_ranges[] = {ICON_MIN_FA,ICON_MAX_FA,0};
-    ImFontConfig icon_config;
-    icon_config.MergeMode = true;
-    icon_config.PixelSnapH = true;
-    icon_config.FontDataOwnedByAtlas=false;
-
-    const int font_data_size = IM_ARRAYSIZE(data_font);
-    const int icon_data_size = IM_ARRAYSIZE(data_icon);
-
-    ImFontConfig font_config;
-    font_config.FontDataOwnedByAtlas=false;
-    io.Fonts->AddFontFromMemoryTTF((void*)data_font, font_data_size,16,&font_config);
-    io.Fonts->AddFontFromMemoryTTF((void*)data_icon, icon_data_size,20*2.0f/3.0f,&icon_config,icons_ranges);
-    io.Fonts->AddFontFromMemoryTTF((void*)ProtestStrike,IM_ARRAYSIZE(ProtestStrike),32,&font_config);
+    Application::Init(window);
+    Application::LoadFonts();
 
     // glfwSwapInterval(1);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -127,14 +123,23 @@ int main(void){
     style.ItemSpacing.y=6.0f;
     style.ScrollbarRounding=2.0f;
 
+
+    GLFWimage images[1];
+    images[0].pixels = stbi_load_from_memory(AppIcon, IM_ARRAYSIZE(AppIcon), &images[0].width, &images[0].height, 0, 4); // rgba channels
+    glfwSetWindowIcon(window, 1, images);
+    stbi_image_free(images[0].pixels);
+
+
     ApplyDraculaColorScheme();
-    Application::Init();
+
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetWindowFocusCallback(window, WindowFocusCallback);
 
     while (!glfwWindowShouldClose(window)) {
+
         glfwGetWindowSize(window, &width, &height);
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     #ifdef GL_USE_OPENGL_LATEST
         ImGui_ImplOpenGL3_NewFrame();
@@ -149,7 +154,9 @@ int main(void){
         Application::Render();
 
         // Render Imgui Stuff
-        // ImGui::ShowDemoWindow();
+    #ifdef GL_DEBUG
+        ImGui::ShowDemoWindow();
+    #endif
 
 
         // End of render
@@ -158,9 +165,28 @@ int main(void){
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     #else
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-    #endif        
+    #endif
+
+        //Must be called after ImGui_ImplOpenGL3_RenderDrawData/ImGui_ImplOpenGL2_RenderDrawData
+        Application::SwitchDisplayModeIfNeeded(width, height);
+        Application::UpdateFontsIfNeeded();
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+
+        //Handling FPS
+        static std::chrono::high_resolution_clock::time_point mLastFrameTime;
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsedTime = currentTime - mLastFrameTime;
+
+        double targetFrameTime = 1.0 / targetFPS;
+        if (elapsedTime.count() < targetFrameTime){
+            double remainingTime = targetFrameTime - elapsedTime.count();
+            std::this_thread::sleep_for(std::chrono::duration<double>(remainingTime));
+            continue;
+        }
+
+        mLastFrameTime = currentTime;
     }
     #ifdef GL_USE_OPENGL_LATEST
         ImGui_ImplOpenGL3_Shutdown();

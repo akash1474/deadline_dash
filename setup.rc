@@ -8,12 +8,12 @@ BEGIN
     BLOCK "080904E4"
     BEGIN
       VALUE "CompanyName", "Blank Coperation"
-      VALUE "FileDescription", "Simple OpenGL application with imgui and spdlog"
+      VALUE "FileDescription", "Application for keeping track of deadlines"
       VALUE "FileVersion", "1.0.0"
-      VALUE "InternalName", "GLFW OpenGL"
+      VALUE "InternalName", "Deadline Dash"
       VALUE "LegalCopyright", "yes"
-      VALUE "OriginalFilename", "glfw_opengl.exe"
-      VALUE "ProductName", "GLFW OpenGL"
+      VALUE "OriginalFilename", "DeadlineDash.exe"
+      VALUE "ProductName", "Deadline Dash"
       VALUE "ProductVersion", "1.0"
     END
   END
