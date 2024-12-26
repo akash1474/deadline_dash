@@ -24,7 +24,7 @@ Deadline Dash is a sleek and customizable countdown timer application built with
 ![Main Timer View](./screenshots/normal.png)
 ### Focus Mode
 ![Main Timer View](./screenshots/focus.png)
-![Main Timer View](./screenshots/focus2.png)
+![Main Timer View](./screenshots/format.png)
 
 ### Settings Panel
 ![Settings Panel](./screenshots/settings.png)
