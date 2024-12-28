@@ -7,14 +7,16 @@ BEGIN
   BEGIN
     BLOCK "080904E4"
     BEGIN
-      VALUE "CompanyName", "Blank Coperation"
+      VALUE "CompanyName", "Akash Pandit"
       VALUE "FileDescription", "Application for keeping track of deadlines"
       VALUE "FileVersion", "1.0.0"
-      VALUE "InternalName", "Deadline Dash"
-      VALUE "LegalCopyright", "yes"
+      VALUE "InternalName", "DeadlineDash.exe"
+      VALUE "LegalCopyright", "Copyright © 2024, Akash Pandit"
       VALUE "OriginalFilename", "DeadlineDash.exe"
       VALUE "ProductName", "Deadline Dash"
       VALUE "ProductVersion", "1.0"
+      VALUE "Comments", "Deadline Dash helps manage and track your deadlines effectively."
+      VALUE "LegalTrademarks", "Deadline Dash™ is a trademark of Akash Pandit."
     END
   END
   BLOCK "VarFileInfo"
